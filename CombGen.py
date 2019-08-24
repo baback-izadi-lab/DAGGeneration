@@ -318,11 +318,7 @@ class CombGen:
 
 if __name__ == "__main__":
     print("This is Start of main")
-    pc = ProcComb(3)
-    pc.set_proc(0, 2)
-    pc.set_proc(1, 2)
-    pc.set_proc(2, 3)
-    # print "main"
+
     data = TaskGraphData()
     dat = DatHandler()
     dat.set_path('/home/kabir/PycharmProjects/DAGGeneration/example_case0.dat')
