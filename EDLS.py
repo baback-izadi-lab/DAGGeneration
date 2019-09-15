@@ -20,11 +20,13 @@ class StaticAlgorithm:
         g = self.init(g)
         # self.print_median(g, pc)
         self.write_median(g)
+
         for i in g.task_order:
             g.current_task = i
             g = self.energy(g,pc)
             g = self.dynamic_level(g,pc,gamma)
-            self.write_dl(g,pc,gamma)
+            self.write_dl(g,pc,i)
+            g=self.assign(g,pc)
             if i != g.task_order[len(g.task_order)-1]:
                 g = self.next_ready(g,pc)
                 g = self.next_da(g,pc)
@@ -80,10 +82,9 @@ class StaticAlgorithm:
         """Calculates the value of delta i.e. the difference between the speeds of processors"""
         # @type g digraph
         # @type pc proc_comb
-        for task in range(g.num_tasks):
+        for task in g.task_order:
             for proc in range(pc.num_proc):
-                g.processors[pc.proc[proc]].delta[task] = (
-                            g.tasks[task].median - g.processors[pc.proc[proc]].exec_time[pc.speed[proc]][task])
+                g.processors[pc.proc[proc]].delta[task] = (g.tasks[task].median - g.processors[pc.proc[proc]].exec_time[pc.speed[proc]][task])
 
         return g
 
@@ -245,6 +246,8 @@ class StaticAlgorithm:
 
         g.processors[g.hi_dl_proc].currentTime = start_time + end_time
         g.task_exec_time[g.current_task] = start_time + end_time
+        g.processors[g.hi_dl_proc].queue.append(g.hi_dl_task)
+        print()
         g.processors[g.hi_dl_task].assigned_proc = g.hi_dl_proc
         g.scheduled_tasks.append(g.hi_dl_task)
 
@@ -288,26 +291,18 @@ class StaticAlgorithm:
         """Calculates the DA for the next iteration"""
         # @type g digraph
         # @type pc proc_comb
-        for task in range(g.num_tasks):
-            if (g.tasks[task].ready == 1):
-                for proc in range(pc.num_proc):
-                    if (g.processors[pc.proc[proc]].DA[task] != 0):
-                        g.processors[pc.proc[proc]].DA[task] -= g.processors[pc.proc[proc]].DA[task] - \
-                                                                g.processors[pc.proc[g.hi_dl_proc]].exec_time[0][
-                                                                    g.hi_dl_task]
-                        # if(g.processors[pc.proc[proc]].DA[task]<0):
-                        #   g.processors[pc.proc[proc]].DA[task]=0
+        for proc in range(pc.num_proc):
+            if (g.processors[pc.proc[proc]].DA[g.current_task] != 0):
+                g.processors[pc.proc[proc]].DA[g.current_task] -= g.processors[pc.proc[proc]].DA[g.current_task] - g.processors[pc.proc[g.hi_dl_proc]].exec_time[0][g.hi_dl_task]
 
-        for task in range(g.num_tasks):
+        for task in g.task_order:
             if (g.tasks[task].ready == 1 and g.has_link(g.hi_dl_task, task)):
-                for proc in range(pc.num_proc):
+                for proc in pc.proc:
                     if (proc != g.hi_dl_proc):
-                        g.processors[pc.proc[proc]].DA[task] = g.processors[pc.proc[g.hi_dl_proc]].exec_time[0][
-                                                                   g.hi_dl_task] + g.weight[g.hi_dl_task][task]
+                        g.processors[pc.proc[proc]].DA[task] = g.processors[pc.proc[g.hi_dl_proc]].exec_time[0][g.hi_dl_task] + g.weight[g.hi_dl_task][task]
 
                     if (proc == g.hi_dl_proc):
-                        g.processors[pc.proc[proc]].DA[task] = g.processors[pc.proc[g.hi_dl_proc]].exec_time[0][
-                            g.hi_dl_task]
+                        g.processors[pc.proc[proc]].DA[task] = g.processors[pc.proc[g.hi_dl_proc]].exec_time[0][g.hi_dl_task]
 
         return g
 
@@ -497,7 +492,17 @@ class StaticAlgorithm:
                         g.tasks[next_tasks[task]].ready = 1
         """
 
-
+    def findTaskOrder(self,g,temp_list,task_order):
+        temp = []
+        for i in range(len(temp_list)):
+            for j in range(len(g.links[temp_list[i]])):
+                if g.links[temp_list[i]][j] ==1:
+                    if j in task_order:
+                        task_order.remove(j)
+                    if j not in temp:
+                        temp.append(j)
+        temp.sort() #why?
+        return temp
 
 if __name__ == "__main__":
 

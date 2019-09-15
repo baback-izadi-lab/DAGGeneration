@@ -57,12 +57,12 @@ class ImplementationSA():
 
         self.g.task_order = task_order
 
-        self.g_temp = copy.deepcopy(self.g)
-        self.tp_temp = copy.deepcopy(self.tp)
+        #self.g_temp = copy.deepcopy(self.g)
+        #self.tp_temp = copy.deepcopy(self.tp)
 
         for pc in all_combinations:
-            self.g = copy.deepcopy(self.g_temp)
-            self.tp = copy.deepcopy(self.tp_temp)
+            #self.g = copy.deepcopy(self.g_temp)
+            #self.tp = copy.deepcopy(self.tp_temp)
             self.g.current_pc = itr
             sa = StaticAlgorithm()
             self.g = sa.edls(self.g,pc,self.gamma)
