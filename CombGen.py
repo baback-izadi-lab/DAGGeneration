@@ -16,7 +16,7 @@ class TGFFParser:
 
     def parse_tgff(self):
         """Reads the tgff file"""
-        self.tgff_file = open('/home/kabir/Downloads/tgff-3.6/examples/example_case0.tgff', 'r')
+        self.tgff_file = open('/home/rashad/Documents/tgff-3.6/examples/example_case0.tgff', 'r')
         text = self.tgff_file.readlines()
         lc = 0
         taskType = 50  # Total number of task types is always 50
@@ -65,8 +65,18 @@ class TGFFParser:
                     for x in range(self.data.num_tasks):
                         for speed in range(self.data.get_num_speeds(proc)):
                             self.g.processors[proc].add_power(float(text[lc + x + 1].split()[2 + speed]), speed, task)
+                        lastTask = task
                         task += 1
                 lc += 1
+
+            # add power for idle
+            for speed in range(self.data.get_num_speeds(proc)):
+                if speed == 0:
+                    self.g.processors[proc].add_power(0.5,speed,lastTask)
+                elif speed == 1:
+                    self.g.processors[proc].add_power(1.5,speed,lastTask)
+                else:
+                    self.g.processors[proc].add_power(2.5,speed,lastTask)
 
         return self.g
 
@@ -137,15 +147,17 @@ class Digraph:
         self.task_queue = []  # queue of tasks
         self.num_edges = 0
         self.edge_list = []  # list of edges
-        self.temperature = [313.15 for count in range(procs)]  # array of temperature values
-        self.temperature_values = []
+        #self.temperature = [313.15 for count in range(procs)]  # array of temperature values
+        #self.temperature_values = []
         self.task_order = []
         self.current_task = 0
         self.current_time = 0.0
-        self.ro = 0.0
-        self.beta = 0.0
+        #self.ro = 0.0
+        #self.beta = 0.0
         self.task_exec_time = [0 for count in range(tasks)]
-
+        self.current_pc = 0
+        self.task_start_time = [0 for count in range(tasks)]
+        self.task_end_time = [0 for count in range(tasks)]
         # print "temperature = %s" %(self.temperature)
         for i in range(self.num_tasks):
             t = Task(i)
@@ -237,6 +249,12 @@ class Digraph:
         # self.total_exec_time = 0
         self.task_queue = []
 
+    def getLastNodes(self):
+        counter = 0
+        for count in range(self.num_tasks):
+            if self.out_degree(count)==0:
+                counter += 1;
+
 class ProcComb:
     "This class is used to select certain processors from a pool"
 
@@ -321,7 +339,7 @@ if __name__ == "__main__":
 
     data = TaskGraphData()
     dat = DatHandler()
-    dat.set_path('/home/kabir/PycharmProjects/DAGGeneration/example_case0.dat')
+    dat.set_path('/home/rashad/PycharmProjects/DAGGeneration/example_case0.dat')
     data = dat.read_dat()
     tg = TGFFGenerator(data, 'example_case0')
     tg.write_file()

@@ -191,7 +191,7 @@ class TGFFGenerator:
         """Pass TaskGraphData and filename ONLY of the tgff file"""
         #print "I'm in TGFFGenerator __int__!"
         self.data = data
-        self.tgff_path = "/home/kabir/Downloads/tgff-3.6/"
+        self.tgff_path = "/home/rashad/Documents/tgff-3.6/"
         self.tgff_path_example = self.tgff_path + 'examples/'
         self.tgff_filename = tgff_filename + '.tgffopt'
         self.write_file()
@@ -240,7 +240,7 @@ class TGFFcommand:
     """Runs the TGFF command"""
     def __init__(self,tgff_filename):
         self.tgff_filename = tgff_filename
-        self.tgff_path = "/home/kabir/Downloads/tgff-3.6/"
+        self.tgff_path = "/home/rashad/Documents/tgff-3.6/"
         self.tgff_path_example = self.tgff_path + 'examples/'
         self.tgff_filename = tgff_filename + '.tgffopt'
         #retcode = subprocess.call([self.tgff_path+'tgff',self.tgff_path_example+tgff_filename])
@@ -279,7 +279,7 @@ if __name__ == "__main__":
     """
 
     dat = DatHandler()
-    dat.set_path('/home/kabir/PycharmProjects/DAGGeneration/example_case0.dat')
+    dat.set_path('/home/rashad/PycharmProjects/DAGGeneration/example_case0.dat')
     #dat.write_dat(data)
     data = dat.read_dat()
     tg = TGFFGenerator(data, 'example_case0')
