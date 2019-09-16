@@ -6,7 +6,7 @@ class EDLS:
     def __init__(self, dag_path):
         self.dag = DAG(dag_path)
 
-    def run(self, speed_setting):
+    def run(self, speed_setting, dls=False):
         self.speed_setting = speed_setting
         self.schedule = [[] for i in range(len(self.speed_setting))]
         self.remaining_tasks = set(self.dag.graph.nodes())
@@ -19,8 +19,11 @@ class EDLS:
             self.ready_nodes = list(self.ready_nodes)
             for node in self.ready_nodes:
                 dls = self.dl(node)
-                edls = dls + dls * (1 - self.alpha(node))
-                all_edls.append(edls)
+                if not dls:
+                    edls = dls + dls * (1 - self.alpha(node))
+                    all_edls.append(edls)
+                else:
+                    all_edls.append(dls)
 
             all_edls = np.array(all_edls)
             print(self.ready_nodes)
@@ -106,5 +109,8 @@ class EDLS:
 
 if __name__ == "__main__":
     edls = EDLS('test_simple.json')
-    schedule = edls.run([0, 0, 0])
+    processor_speeds = [0, 0, 0]
+    # Note if you want to run DLS algorithm uncoment following command
+    # schedule = edls.run(processor_speeds, dls=True)
+    schedule = edls.run(processor_speeds)
     print(schedule)
