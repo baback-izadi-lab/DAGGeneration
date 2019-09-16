@@ -30,7 +30,7 @@ class EDLS:
             print(all_edls)
 
             node_index, self.assigned_proc = np.unravel_index(
-                np.argmax(all_edls, axis=None), all_edls.shape)
+                np.nanargmax(all_edls, axis=None), all_edls.shape)
             node = self.ready_nodes[node_index]
             self.schedule[self.assigned_proc].append(node)
             self.assigned_node = node
@@ -48,21 +48,30 @@ class EDLS:
         alphas = []
         energies = []
         for proc, speed in enumerate(self.speed_setting):
-            power = self.dag.data['proc_power'][str(proc)][speed][node]
-            exec_time = self.dag.data['proc_exec'][str(proc)][speed][node]
-            energies.append(power*exec_time)
+            if speed is not None:
+                power = self.dag.data['proc_power'][str(proc)][speed][node]
+                exec_time = self.dag.data['proc_exec'][str(proc)][speed][node]
+                energies.append(power*exec_time)
+            else:
+                energies.append(0)
         max_energy = max(energies)
         for energy in energies:
-            alphas.append(energy/max_energy)
+            if energy > 0:
+                alphas.append(energy/max_energy)
+            elif energy == 0:
+                alphas.append(float('inf'))
         return np.array(alphas)
 
     def dl(self, node):
         dls = []
         for proc, speed in enumerate(self.speed_setting):
-            dls_value = self.dag.static_levels[node] - max(
-                [self.data_ready(node, proc, speed), self.proc_ready(node, proc, speed)]) + self.delta(node, proc, speed)
+            if speed is not None:
+                dls_value = self.dag.static_levels[node] - max(
+                    [self.data_ready(node, proc, speed), self.proc_ready(node, proc, speed)]) + self.delta(node, proc, speed)
 
-            dls.append(dls_value)
+                dls.append(dls_value)
+            else:
+                dls.append(0)
 
         return np.array(dls)
 
@@ -79,7 +88,6 @@ class EDLS:
                 da = parent_exec_time
                 if parent_assigned_proc != proc:
                     da += self.dag.graph[parent][node]['weight']
-
         return da
 
     def proc_ready(self, node, proc, speed):
@@ -109,7 +117,7 @@ class EDLS:
 
 if __name__ == "__main__":
     edls = EDLS('test_simple.json')
-    processor_speeds = [0, 0, 0]
+    processor_speeds = [None, 0, 0]
     # Note if you want to run DLS algorithm uncoment following command
     #schedule = edls.run(processor_speeds, dls_algo=True)
     schedule = edls.run(processor_speeds)
