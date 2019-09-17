@@ -121,16 +121,18 @@ class TGFFParser:
 
 
 class DAG:
-    def __init__(self, input_file='test_simple.json'):
+    def __init__(self, input_file='test_simple.json', speed_setting=[]):
         self.data = json.load(open(input_file))
         arcs = self.data['arcs']
         self.graph = nx.DiGraph()
         self.comm_time = []
 
+        # Construct digraph
         for arc in arcs:
             source, dest, comm_time = arcs[arc]
             self.graph.add_edge(source, dest, weight=comm_time)
 
+        # Terminal nodes used for calculating SL
         self.terminal_nodes = [
             x for x in self.graph.nodes() if self.graph.out_degree(x) == 0]
 
@@ -139,7 +141,7 @@ class DAG:
         for node in list(self.graph.nodes):
             exec_times = []
             for proc, times in self.data['proc_exec'].items():
-                exec_times.append(times[0][node])
+                exec_times.append(times[speed_setting[int(proc)]][node])
             self.median_times.append(statistics.median(exec_times))
 
         # Calculating static levels

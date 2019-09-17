@@ -1,19 +1,24 @@
 from data_representation import DAG
 import numpy as np
+import json
 
 
 class EDLS:
     def __init__(self, dag_path):
-        self.dag = DAG(dag_path)
+        self.dag_path = dag_path
 
     def run(self, speed_setting, dls_algo=False):
+        self.dag = DAG(self.dag_path, speed_setting=speed_setting)
         self.speed_setting = speed_setting
         self.schedule = [[] for i in range(len(self.speed_setting))]
         self.remaining_tasks = set(self.dag.graph.nodes())
-        self.ready_nodes = set([0])
+        self.origin_nodes = [
+            x for x in self.dag.graph.nodes() if self.dag.graph.in_degree(x) == 0]
+        self.ready_nodes = set(self.origin_nodes)
         self.assigned_proc = None
         self.assigned_node = None
         self.tfs = [0 for i in range(self.dag.graph.number_of_nodes())]
+
         while len(self.remaining_tasks) > 0:
             all_edls = []
             self.ready_nodes = list(self.ready_nodes)
@@ -28,12 +33,16 @@ class EDLS:
             all_edls = np.array(all_edls)
             print(self.ready_nodes)
             print(all_edls)
+            print('------------------------------')
 
             node_index, self.assigned_proc = np.unravel_index(
                 np.nanargmax(all_edls, axis=None), all_edls.shape)
             node = self.ready_nodes[node_index]
             self.schedule[self.assigned_proc].append(node)
             self.assigned_node = node
+
+            exec_time = self.dag.data['proc_exec'][str(
+                self.assigned_proc)][self.speed_setting[self.assigned_proc]][node]
 
             self.ready_nodes = set(self.ready_nodes)
             self.ready_nodes.remove(node)
@@ -91,7 +100,6 @@ class EDLS:
         return da
 
     def proc_ready(self, node, proc, speed):
-
         tf = 0
         if self.assigned_proc:
             assigned_speed = self.speed_setting[self.assigned_proc]
@@ -114,11 +122,36 @@ class EDLS:
             if node in nodes:
                 return proc
 
+    def get_agent_schedule(self):
+        agent_schedule = {}
+        for node in self.dag.graph.nodes():
+            agent_data = {}
+            agent_data['children'] = set([
+                node for node in self.dag.graph.successors(node)])
+            agent_data['parents'] = set(
+                [node for node in self.dag.graph.predecessors(node)])
+
+            for proc, nodes in enumerate(self.schedule):
+                if node in nodes:
+                    node_idx = nodes.index(node)
+                    if node_idx < len(nodes)-1:
+                        agent_data['children'].add(nodes[node_idx+1])
+                    if node_idx > 0:
+                        agent_data['parents'].add(nodes[node_idx-1])
+                    agent_data['children'] = list(agent_data['children'])
+                    agent_data['parents'] = list(agent_data['parents'])
+                    agent_data['processor'] = proc
+                    agent_data['speed'] = self.speed_setting[proc]
+            agent_schedule[node] = agent_data
+        return agent_schedule
+
 
 if __name__ == "__main__":
     edls = EDLS('test_simple.json')
-    processor_speeds = [None, 0, 0]
+    processor_speeds = [0, 0, 0]
     # Note if you want to run DLS algorithm uncoment following command
-    #schedule = edls.run(processor_speeds, dls_algo=True)
-    schedule = edls.run(processor_speeds)
+    schedule = edls.run(processor_speeds, dls_algo=True)
+    # schedule = edls.run(processor_speeds)
+    agent_schedule = edls.get_agent_schedule()
     print(schedule)
+    #json.dump(agent_schedule, open('agent_schedule.json', 'w'))
