@@ -150,8 +150,8 @@ if __name__ == "__main__":
     edls = EDLS('test_simple.json')
     processor_speeds = [0, 0, 0]
     # Note if you want to run DLS algorithm uncoment following command
-    schedule = edls.run(processor_speeds, dls_algo=True)
+    schedule = edls.run(processor_speeds, dls_algo=False)
     # schedule = edls.run(processor_speeds)
     agent_schedule = edls.get_agent_schedule()
     print(schedule)
-    #json.dump(agent_schedule, open('agent_schedule.json', 'w'))
+    json.dump(agent_schedule, open('agent_schedule.json', 'w'))

@@ -2,35 +2,41 @@
 # Importing the matplotlb.pyplot
 import matplotlib.pyplot as plt
 
-# Declaring a figure "gnt"
-fig, gnt = plt.subplots()
 
-# Setting Y-axis limits
-gnt.set_ylim(0, 50)
+def plot(schedule, max_time):
 
-# Setting X-axis limits
-gnt.set_xlim(0, 160)
+    # Declaring a figure "gnt"
+    fig, gnt = plt.subplots()
 
-# Setting labels for x-axis and y-axis
-gnt.set_xlabel('seconds since start')
-gnt.set_ylabel('Processor')
+    # Setting Y-axis limits
+    gnt.set_ylim(0, 50)
 
-# Setting ticks on y-axis
-gnt.set_yticks([15, 25, 35])
-# Labelling tickes of y-axis
-gnt.set_yticklabels(['1', '2', '3'])
+    # Setting X-axis limits
+    gnt.set_xlim(0, max_time)
 
-# Setting graph attribute
-gnt.grid(True)
+    # Setting labels for x-axis and y-axis
+    gnt.set_xlabel('seconds since start')
+    gnt.set_ylabel('Processor')
 
-# Declaring a bar in schedule
-gnt.broken_barh([(40, 50)], (30, 9), facecolors=('tab:orange'))
+    # Setting ticks on y-axis
+    y_ticks = [35, 25, 15]
+    gnt.set_yticks(y_ticks)
+    # Labelling tickes of y-axis
+    gnt.set_yticklabels(['1', '2', '3'])
 
-# Declaring multiple bars in at same level and same width
-gnt.broken_barh([(110, 10), (150, 10)], (10, 9),
-                facecolors='tab:blue')
+    # Setting graph attribute
+    gnt.grid(True)
 
-gnt.broken_barh([(10, 50), (100, 20), (130, 10)], (20, 9),
-                facecolors=('tab:red'))
+    y_coords = [(30, 9), (20, 9), (10, 9)]
+    proc_colors = ['tab:orange', 'tab:blue', 'tab:red']
 
-plt.savefig("gantt1.png")
+    for i, proc in enumerate(schedule):
+        sch = []
+        for task in proc:
+            sch.append((task[1], task[2] - task[1]))
+            gnt.text((task[1]+task[2])/2-2.5,
+                     y_ticks[i], "Task {}".format(task[0]))
+        gnt.broken_barh(
+            sch, y_coords[i], facecolors=proc_colors[i], edgecolor='black')
+
+    plt.savefig("gantt1.png")
