@@ -34,8 +34,10 @@ def plot(schedule, max_time):
         sch = []
         for task in proc:
             sch.append((task[1], task[2] - task[1]))
-            gnt.text((task[1]+task[2])/2-2.5,
-                     y_ticks[i], "Task {}".format(task[0]))
+            gnt.text((task[1]+task[2])/2,
+                     y_ticks[i], "Task {}".format(task[0]),
+                     horizontalalignment='center',
+                     verticalalignment='center')
         gnt.broken_barh(
             sch, y_coords[i], facecolors=proc_colors[i], edgecolor='black')
 

@@ -127,9 +127,9 @@ class EDLS:
         for node in self.dag.graph.nodes():
             agent_data = {}
             agent_data['children'] = set([
-                node for node in self.dag.graph.successors(node)])
+                n for n in self.dag.graph.successors(node)])
             agent_data['parents'] = set(
-                [node for node in self.dag.graph.predecessors(node)])
+                [n for n in self.dag.graph.predecessors(node)])
 
             for proc, nodes in enumerate(self.schedule):
                 if node in nodes:
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     edls = EDLS('test_simple.json')
     processor_speeds = [0, 0, 0]
     # Note if you want to run DLS algorithm uncoment following command
-    schedule = edls.run(processor_speeds, dls_algo=False)
+    schedule = edls.run(processor_speeds, dls_algo=True)
     # schedule = edls.run(processor_speeds)
     agent_schedule = edls.get_agent_schedule()
     print(schedule)
