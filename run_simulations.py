@@ -11,14 +11,14 @@ from collections import defaultdict
 parser = TGFFParser()
 total_processors = 3
 total_speeds = [1, 2, 3]
-all_base_powers = [[5], [5, 15], [5, 15, 25]]
+all_base_powers = [[5], [5, 6], [5, 6, 7]]
 
-base_path = './results/EDLS/DAG-10/'
-# data = parser.parse(base_path+'example_case1.tgff',
-#                    total_processors, total_speeds)
-#sim_data = 'task_data.json'
-sim_data = 'test_simple.json'
-# parser.write_json(base_path+sim_data)
+base_path = './results/TEDLS-NB/DAG-25/'
+data = parser.parse(base_path+'example_case1.tgff',
+                    total_processors, total_speeds)
+sim_data = 'task_data.json'
+
+parser.write_json(base_path+sim_data)
 
 
 all_speeds = []
@@ -70,9 +70,8 @@ def run(beta, dls_algo=False, base_power_min=True):
                                                             beta, power_setting), float_format='%.3f')
 
 
-beta_values = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, (0.85, 1.0)]
+beta_values = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, (0.85, 1.0), (0.95, 1.0)]
 
 for beta in beta_values:
     run(beta, dls_algo=False,  base_power_min=True)
-
-run(1.0, dls_algo=True, base_power_min=True)
+    run(beta, dls_algo=True, base_power_min=True)
