@@ -26,6 +26,7 @@ class EDLS:
                 dls = self.dl(node)
                 if not dls_algo:
                     edls = dls + dls * (1 - self.alpha(node))
+                    edls[np.isnan(edls)] = np.NINF
                     all_edls.append(edls)
                 else:
                     all_edls.append(dls)
@@ -34,22 +35,28 @@ class EDLS:
             print(self.ready_nodes)
             print(all_edls)
             print('------------------------------')
-
             node_index, self.assigned_proc = np.unravel_index(
-                np.nanargmax(all_edls, axis=None), all_edls.shape)
+                np.argmax(all_edls, axis=None), all_edls.shape)
             node = self.ready_nodes[node_index]
             self.schedule[self.assigned_proc].append(node)
             self.assigned_node = node
 
-            exec_time = self.dag.data['proc_exec'][str(
-                self.assigned_proc)][self.speed_setting[self.assigned_proc]][node]
+            # exec_time = self.dag.data['proc_exec'][str(
+            #    self.assigned_proc)][self.speed_setting[self.assigned_proc]][node]
 
             self.ready_nodes = set(self.ready_nodes)
             self.ready_nodes.remove(node)
-            for n in list(self.dag.graph.adj[node]):
-                self.ready_nodes.add(n)
-
             self.remaining_tasks.remove(node)
+
+            for n in list(self.dag.graph.successors(node)):
+                # Check if any of the parents of the next task is unfinished
+                n_ready = True
+                for parent in list(self.dag.graph.predecessors(n)):
+                    if parent in self.remaining_tasks:
+                        n_ready = False
+                        break
+                if n_ready:
+                    self.ready_nodes.add(n)
 
         return self.schedule
 
@@ -68,19 +75,22 @@ class EDLS:
             if energy > 0:
                 alphas.append(energy/max_energy)
             elif energy == 0:
-                alphas.append(float('inf'))
+                alphas.append(np.Inf)
         return np.array(alphas)
 
     def dl(self, node):
         dls = []
         for proc, speed in enumerate(self.speed_setting):
             if speed is not None:
-                dls_value = self.dag.static_levels[node] - max(
-                    [self.data_ready(node, proc, speed), self.proc_ready(node, proc, speed)]) + self.delta(node, proc, speed)
+                sl = self.dag.static_levels[node]
+                da = self.data_ready(node, proc, speed)
+                tf = self.proc_ready(node, proc, speed)
+                #print("sl: {}, da:{}, tf:{}".format(sl, da, tf))
+                dls_value = sl - max([da, tf]) + self.delta(node, proc, speed)
 
                 dls.append(dls_value)
             else:
-                dls.append(0)
+                dls.append(np.NINF)
 
         return np.array(dls)
 
@@ -147,11 +157,10 @@ class EDLS:
 
 
 if __name__ == "__main__":
-    edls = EDLS('test_simple.json')
+    edls = EDLS('25_task.json')
     processor_speeds = [0, 0, 0]
     # Note if you want to run DLS algorithm uncoment following command
     schedule = edls.run(processor_speeds, dls_algo=True)
-    # schedule = edls.run(processor_speeds)
     agent_schedule = edls.get_agent_schedule()
     print(schedule)
     json.dump(agent_schedule, open('agent_schedule.json', 'w'))

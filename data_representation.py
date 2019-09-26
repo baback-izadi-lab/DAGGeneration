@@ -141,7 +141,11 @@ class DAG:
         for node in list(self.graph.nodes):
             exec_times = []
             for proc, times in self.data['proc_exec'].items():
-                exec_times.append(times[speed_setting[int(proc)]][node])
+                if speed_setting[int(proc)] is None:
+                    # exec_times.append(float('inf'))
+                    continue
+                else:
+                    exec_times.append(times[speed_setting[int(proc)]][node])
             self.median_times.append(statistics.median(exec_times))
 
         # Calculating static levels
@@ -164,8 +168,8 @@ class DAG:
 
 
 if __name__ == "__main__":
-    #parser = TGFFParser()
-    #data = parser.parse('../TaskGenerator/example_case0.tgff', 3, [1, 2, 3])
-    # parser.write_json('test.json')
-    dag = DAG()
-    print(dag.static_levels)
+    parser = TGFFParser()
+    data = parser.parse('25_task_TEDLS.tgff', 3, [1, 2, 3])
+    parser.write_json('25_task.json')
+    #dag = DAG()
+    # print(dag.static_levels)
