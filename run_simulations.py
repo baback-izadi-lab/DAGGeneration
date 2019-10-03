@@ -9,24 +9,46 @@ from collections import defaultdict
 
 
 parser = TGFFParser()
+# For small DAGS
 total_processors = 3
 total_speeds = [1, 2, 3]
-all_base_powers = [[5], [5, 6], [5, 6, 7]]
+all_base_powers = [[5], [5, 15], [5, 15, 25]]
 
-base_path = './results/TEDLS-NB/DAG-25/'
-data = parser.parse(base_path+'example_case1.tgff',
+# For Large DAGS
+"""
+total_processors = 5
+total_speeds = [1, 2, 3, 3, 3]
+all_base_powers = [[5], [5, 6], [5, 6, 7], [5, 6, 7], [5, 6, 7]]
+"""
+
+# TGFF Parser from data representation
+# Parses TGFF file and converts to json
+base_path = './results/TEDLS-NB/DAG-100/'
+data = parser.parse(base_path+'example_case3.tgff',
                     total_processors, total_speeds)
+#sim_data = 'test_simple.json'
 sim_data = 'task_data.json'
-
 parser.write_json(base_path+sim_data)
 
-
+# Generates all possible speeds
 all_speeds = []
 for speeds in total_speeds:
     all_speeds.append([i for i in range(speeds)] + [None])
 
 
 def run(beta, dls_algo=False, base_power_min=True):
+    """
+    This functions runs the agent system based on certain parameters
+
+    params:
+        beta: float from 0.0 to 1.0
+        dls_algo: bool. DLS used if True, else use EDLS
+        base_power_min: bool. Decides how to calculate idle energy
+                        If True: Assume processor switches to slowest speed
+                        during idle periods, which implies lowest energy
+                        If False: Assume processor stays idle at specified speed
+
+    """
     table_data = defaultdict(list)
     all_processors_speeds = product(*all_speeds)
     for processor_speeds in all_processors_speeds:
@@ -44,11 +66,14 @@ def run(beta, dls_algo=False, base_power_min=True):
         agent_schedule = edls.get_agent_schedule()
         json.dump(agent_schedule, open(base_path+'agent_schedule.json', 'w'))
 
+        # Agent system runs here
         runner = ScheduleRunner(schedule=base_path+'agent_schedule.json',
                                 dag_data=base_path+sim_data,
                                 base_powers=base_powers, beta=beta)
 
         runner.start()
+
+        # Results of the run are collected here
         table_data['Processor Combination'].append(processor_speeds)
         table_data['Task Energy'].append(runner.task_energy)
         table_data['Total Execution Time'].append(runner.max_time)
@@ -57,21 +82,19 @@ def run(beta, dls_algo=False, base_power_min=True):
             runner.task_energy+runner.idle_energy)
 
     table = pd.DataFrame.from_dict(table_data)
-    if dls_algo:
-        algo = 'DLS'
-    else:
-        algo = 'EDLS'
-
-    if base_power_min:
-        power_setting = 'min'
-    else:
-        power_setting = 'sch'
-    table.to_csv(base_path+'{}_beta_{}_power_{}.csv'.format(algo,
-                                                            beta, power_setting), float_format='%.3f')
+    return table
 
 
-beta_values = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, (0.85, 1.0), (0.95, 1.0)]
+beta_values = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, (0.85, 1.0)]
 
+writer = pd.ExcelWriter(base_path + 'EDLS_min.xlsx', engine='xlsxwriter')
 for beta in beta_values:
-    run(beta, dls_algo=False,  base_power_min=True)
-    run(beta, dls_algo=True, base_power_min=True)
+    table = run(beta, dls_algo=False,  base_power_min=True)
+    table.to_excel(writer, sheet_name='beta {}'.format(beta))
+writer.save()
+
+writer = pd.ExcelWriter(base_path + 'DLS_min.xlsx', engine='xlsxwriter')
+for beta in beta_values:
+    table = run(beta, dls_algo=True, base_power_min=True)
+    table.to_excel(writer, sheet_name='beta {}'.format(beta))
+writer.save()

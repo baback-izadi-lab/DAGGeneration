@@ -1,6 +1,7 @@
 from data_representation import DAG
 import numpy as np
 import json
+import pandas as pd
 
 
 class EDLS:
@@ -18,6 +19,7 @@ class EDLS:
         self.assigned_proc = None
         self.assigned_node = None
         self.tfs = [0 for i in range(self.dag.graph.number_of_nodes())]
+        step = 0
 
         while len(self.remaining_tasks) > 0:
             all_edls = []
@@ -32,15 +34,22 @@ class EDLS:
                     all_edls.append(dls)
 
             all_edls = np.array(all_edls)
-            print(self.ready_nodes)
-            print(all_edls)
-            print('------------------------------')
+            df = pd.DataFrame(data=all_edls,
+                              index=self.ready_nodes,
+                              columns=[i for i in range(len(self.speed_setting))])
+            step += 1
+            print("Step {}".format(step))
+            print(df)
+
             node_index, self.assigned_proc = np.unravel_index(
                 np.argmax(all_edls, axis=None), all_edls.shape)
             node = self.ready_nodes[node_index]
             self.schedule[self.assigned_proc].append(node)
             self.assigned_node = node
 
+            print("Task assigned: {}. To Processor: {}".format(
+                self.assigned_node, self.assigned_proc))
+            print('-------------------------------------------')
             # exec_time = self.dag.data['proc_exec'][str(
             #    self.assigned_proc)][self.speed_setting[self.assigned_proc]][node]
 
@@ -157,10 +166,10 @@ class EDLS:
 
 
 if __name__ == "__main__":
-    edls = EDLS('25_task.json')
+    edls = EDLS('./results/TEDLS-NB/DAG-25/task_data.json')
     processor_speeds = [0, 0, 0]
     # Note if you want to run DLS algorithm uncoment following command
     schedule = edls.run(processor_speeds, dls_algo=True)
     agent_schedule = edls.get_agent_schedule()
     print(schedule)
-    json.dump(agent_schedule, open('agent_schedule.json', 'w'))
+    #json.dump(agent_schedule, open('agent_schedule.json', 'w'))
