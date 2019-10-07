@@ -8,7 +8,9 @@ This module runs and calculates execution times for each task and processor
 
 class Task:
     def __init__(self, task_num, processor, speed,
-                 exec_time, exec_power, comm_data, speed_data, beta=1.0):
+                 exec_time, exec_power, comm_data,
+                 speed_data, power_data, beta=1.0,
+                 agent_system=True):
         self.task_num = task_num
         self.processor = processor
         self.speed = speed
@@ -19,7 +21,9 @@ class Task:
         self.comm_data = comm_data
         self.task_complete = False
         self.speed_data = speed_data
+        self.power_data = power_data
         self.beta = beta
+        self.agent_system = agent_system
 
     def set_graphs(self, parents, children, processor_times):
         self.parents = parents
@@ -30,19 +34,27 @@ class Task:
         if task in self.parents:
             if clock_time > self.clock_time:
                 self.clock_time = clock_time
+                self.slack_time = slack
             self.parents.remove(task)
+
+        # All parents of this task are finished and
+        # This task is still incomplete, then start execution
         if len(self.parents) == 0 and not self.task_complete:
-            self.avail_time = slack + self.exec_time
-            for speed, exec_time in enumerate(self.speed_data):
-                if exec_time < self.avail_time:
-                    self.speed = speed
-                    self.exec_time = exec_time
+            self.avail_time = self.slack_time + self.exec_time
+            # Agent logic
+            if self.agent_system:
+                for speed, exec_time in enumerate(self.speed_data):
+                    if exec_time <= self.avail_time:
+                        self.speed = speed
+                        self.exec_time = exec_time
+                        self.exec_power = self.power_data[speed]
 
             self.actual_exec = self.exec_time * self.beta
             self.start_time = self.clock_time
             self.clock_time += self.actual_exec
 
             self.end_time = self.start_time + self.actual_exec
+            """
             print('Task {}: '
                   'Proc: {} '
                   'Speed: {} '
@@ -53,6 +65,7 @@ class Task:
                                                self.start_time,
                                                self.end_time,
                                                self.avail_time - self.actual_exec))
+            """
             energy = self.actual_exec * self.exec_power
             task_stats = (self.task_num, round(self.start_time, 3),
                           round(self.end_time, 3), round(energy, 3))
@@ -73,10 +86,12 @@ class Task:
 class ScheduleRunner:
     def __init__(self, schedule='agent_schedule.json',
                  dag_data='test_simple.json',
-                 base_powers=None, beta=1.0):
+                 speed_setting=[],
+                 base_powers=None, beta=1.0,
+                 agent_system=True):
 
         self.beta = beta
-
+        self.speed_setting = speed_setting
         self.base_powers = base_powers
         self.dag_data = json.load(open(dag_data))
         self.schedule = json.load(open(schedule))
@@ -96,14 +111,21 @@ class ScheduleRunner:
             exec_power = self.dag_data['proc_power'][str(
                 processor)][speed][task]
             all_exec = self.dag_data['proc_exec'][str(processor)]
+            all_power = self.dag_data['proc_power'][str(processor)]
             speed_data = [all_exec[speed][task]
                           for speed in range(len(all_exec))]
+            power_data = [all_power[speed][task]
+                          for speed in range(len(all_power))]
+
+            # Deciding beta values for task
             if isinstance(self.beta, float):
                 task_beta = self.beta
-            elif isinstance(self.beta, tuple):
-                task_beta = random.uniform(self.beta[0], self.beta[1])
+            elif isinstance(self.beta, list):
+                task_beta = self.beta[task]
             t = Task(task, processor, speed, exec_time,
-                     exec_power, self.comm_data, speed_data, task_beta)
+                     exec_power, self.comm_data, speed_data, power_data,
+                     task_beta,
+                     agent_system=agent_system)
             self.all_tasks[task] = t
 
         # Task setup connecting parents and children
@@ -133,11 +155,15 @@ class ScheduleRunner:
     def idle_times(self):
         all_idle_times = []
         max_time = self.max_time
-        for proc in self.processor_times:
+        for proc_num, proc in enumerate(self.processor_times):
             proc_idle = max_time
             for task in proc:
                 proc_idle -= task[2]-task[1]
-            all_idle_times.append(proc_idle)
+            if self.speed_setting[proc_num] is None:
+                all_idle_times.append(0)
+            else:
+                all_idle_times.append(proc_idle)
+
         return all_idle_times
 
     @property
@@ -150,10 +176,12 @@ class ScheduleRunner:
 
 
 if __name__ == "__main__":
-    base_powers = [5, 5, 5]
-    runner = ScheduleRunner(schedule='agent_schedule.json',
-                            dag_data='25_task.json',
-                            base_powers=base_powers)
+    base_powers = [5, 15, 25]
+    runner = ScheduleRunner(schedule='./results/EDLS/DAG-10/agent_schedule.json',
+                            dag_data='./results/EDLS/DAG-10/task_data.json',
+                            speed_setting=[None, None, 2],
+                            base_powers=base_powers,
+                            agent_system=True)
 
     runner.start()
     print(runner.processor_times)
@@ -165,6 +193,6 @@ if __name__ == "__main__":
     print(runner.idle_times)
     print(runner.idle_energy)
     print('Total Energy: {}'.format(runner.task_energy + runner.idle_energy))
-    import plot
+    #import plot
 
-    plot.plot(runner.processor_times, runner.max_time)
+    #plot.plot(runner.processor_times, runner.max_time)

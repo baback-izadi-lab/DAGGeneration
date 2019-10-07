@@ -6,27 +6,30 @@ from agent_schedule_runner import ScheduleRunner
 from itertools import product
 import pandas as pd
 from collections import defaultdict
+import random
 
 
+# Data for simulation
 parser = TGFFParser()
 # For small DAGS
-total_processors = 3
-total_speeds = [1, 2, 3]
-all_base_powers = [[5], [5, 15], [5, 15, 25]]
+#total_processors = 3
+#total_speeds = [1, 2, 3]
+#all_base_powers = [[5], [5, 15], [5, 15, 25]]
+#all_base_powers = [[5], [5, 6], [5, 6, 7]]
 
 # For Large DAGS
-"""
+
 total_processors = 5
 total_speeds = [1, 2, 3, 3, 3]
 all_base_powers = [[5], [5, 6], [5, 6, 7], [5, 6, 7], [5, 6, 7]]
-"""
+
 
 # TGFF Parser from data representation
 # Parses TGFF file and converts to json
-base_path = './results/TEDLS-NB/DAG-100/'
-data = parser.parse(base_path+'example_case3.tgff',
+base_path = './results/TEDLS-NB/DAG-400/'
+data = parser.parse(base_path+'example_case7.tgff',
                     total_processors, total_speeds)
-#sim_data = 'test_simple.json'
+
 sim_data = 'task_data.json'
 parser.write_json(base_path+sim_data)
 
@@ -36,7 +39,7 @@ for speeds in total_speeds:
     all_speeds.append([i for i in range(speeds)] + [None])
 
 
-def run(beta, dls_algo=False, base_power_min=True):
+def run(beta, dls_algo=False, base_power_min=True, agent_system=True):
     """
     This functions runs the agent system based on certain parameters
 
@@ -49,6 +52,7 @@ def run(beta, dls_algo=False, base_power_min=True):
                         If False: Assume processor stays idle at specified speed
 
     """
+
     table_data = defaultdict(list)
     all_processors_speeds = product(*all_speeds)
     for processor_speeds in all_processors_speeds:
@@ -68,8 +72,10 @@ def run(beta, dls_algo=False, base_power_min=True):
 
         # Agent system runs here
         runner = ScheduleRunner(schedule=base_path+'agent_schedule.json',
+                                speed_setting=processor_speeds,
                                 dag_data=base_path+sim_data,
-                                base_powers=base_powers, beta=beta)
+                                base_powers=base_powers, beta=beta,
+                                agent_system=agent_system)
 
         runner.start()
 
@@ -85,16 +91,22 @@ def run(beta, dls_algo=False, base_power_min=True):
     return table
 
 
-beta_values = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, (0.85, 1.0)]
+#
+
+beta_values = [1.0, (0.85, 1.0)]
 
 writer = pd.ExcelWriter(base_path + 'EDLS_min.xlsx', engine='xlsxwriter')
 for beta in beta_values:
-    table = run(beta, dls_algo=False,  base_power_min=True)
-    table.to_excel(writer, sheet_name='beta {}'.format(beta))
-writer.save()
+    beta_name = beta
+    if isinstance(beta, tuple):
+        beta = [random.uniform(beta[0], beta[1])
+                for task_num in range(len(parser.tasks))]
+        # beta = [random.uniform(beta[0], beta[1])
+        #        for task_num in range(10)]
 
-writer = pd.ExcelWriter(base_path + 'DLS_min.xlsx', engine='xlsxwriter')
-for beta in beta_values:
-    table = run(beta, dls_algo=True, base_power_min=True)
-    table.to_excel(writer, sheet_name='beta {}'.format(beta))
+    table = run(beta, dls_algo=False,  base_power_min=True, agent_system=True)
+    table.to_excel(writer, sheet_name='beta {} agents'.format(beta_name))
+    table = run(beta, dls_algo=False,
+                base_power_min=False, agent_system=False)
+    table.to_excel(writer, sheet_name='beta {} wo agents'.format(beta_name))
 writer.save()
