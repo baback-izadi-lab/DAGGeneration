@@ -21,7 +21,7 @@ parser = TGFFParser()
 
 total_processors = 5
 total_speeds = [1, 2, 3, 3, 3]
-all_base_powers = [[5], [5, 6], [5, 6, 7], [5, 6, 7], [5, 6, 7]]
+all_base_powers = [[5], [5, 6], [5, 6, 7], [7, 8, 9], [7, 8, 9]]
 
 
 # TGFF Parser from data representation
@@ -94,19 +94,51 @@ def run(beta, dls_algo=False, base_power_min=True, agent_system=True):
 #
 
 beta_values = [1.0, (0.85, 1.0)]
+#beta_values = [1.0]
 
-writer = pd.ExcelWriter(base_path + 'EDLS_min.xlsx', engine='xlsxwriter')
+writer = pd.ExcelWriter(base_path + 'EDLS_1.xlsx', engine='xlsxwriter')
 for beta in beta_values:
-    beta_name = beta
-    if isinstance(beta, tuple):
-        beta = [random.uniform(beta[0], beta[1])
-                for task_num in range(len(parser.tasks))]
-        # beta = [random.uniform(beta[0], beta[1])
-        #        for task_num in range(10)]
+    all_processors_speeds = list(product(*all_speeds))
+    labels = ['Task Energy', 'Total Execution Time',
+              'Idle Energy', 'Total Energy']
+    total_table_data = defaultdict(list)
+    total_table_data['Processor Combination'] = [
+        comb for comb in all_processors_speeds]
 
-    table = run(beta, dls_algo=False,  base_power_min=True, agent_system=True)
-    table.to_excel(writer, sheet_name='beta {} agents'.format(beta_name))
-    table = run(beta, dls_algo=False,
-                base_power_min=False, agent_system=False)
+    for label in labels:
+        total_table_data[label] = [
+            0 for i in range(len(all_processors_speeds))]
+
+    total_table = pd.DataFrame.from_dict(total_table_data)
+    beta_name = beta
+
+    num_of_runs = 1
+    beta_list = []
+    for exp_run in range(num_of_runs):
+        if isinstance(beta, tuple):
+            beta = [random.uniform(beta[0], beta[1])
+                    for task_num in range(len(parser.tasks))]
+        beta_list.append(beta)
+
+    for beta in beta_list:
+        table = run(beta, dls_algo=False,
+                    base_power_min=True, agent_system=True)
+        for label in labels:
+            total_table[label] += table[label]
+
+    for label in labels:
+        total_table[label] /= num_of_runs
+
+    total_table.to_excel(writer, sheet_name='beta {} agents'.format(beta_name))
+
+    total_table = pd.DataFrame.from_dict(total_table_data)
+    for beta in beta_list:
+        table = run(beta, dls_algo=False,
+                    base_power_min=False, agent_system=False)
+        for label in labels:
+            total_table[label] += table[label]
+
+    for label in labels:
+        total_table[label] /= num_of_runs
     table.to_excel(writer, sheet_name='beta {} wo agents'.format(beta_name))
 writer.save()
