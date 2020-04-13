@@ -12,22 +12,22 @@ import random
 # Data for simulation
 parser = TGFFParser()
 # For small DAGS
-#total_processors = 3
-#total_speeds = [1, 2, 3]
-#all_base_powers = [[5], [5, 15], [5, 15, 25]]
-#all_base_powers = [[5], [5, 6], [5, 6, 7]]
 
-# For Large DAGS
+total_processors = 3
+total_tasks = 400
 
-total_processors = 5
-total_speeds = [1, 2, 3, 3, 3]
-all_base_powers = [[5], [5, 6], [5, 6, 7], [7, 8, 9], [7, 8, 9]]
+if total_processors == 3:
+    total_speeds = [1, 2, 3]
+    all_base_powers = [[5], [5, 6], [5, 6, 7]]
+elif total_processors == 5:
+    total_speeds = [1, 2, 3, 3, 3]
+    all_base_powers = [[5], [5, 6], [5, 6, 7], [7, 8, 9], [7, 8, 9]]
 
 
 # TGFF Parser from data representation
 # Parses TGFF file and converts to json
-base_path = './results/TEDLS-NB/DAG-400/'
-data = parser.parse(base_path+'example_case7.tgff',
+base_path = f'./results/TEDLS-NB/DAG-{total_tasks}/{total_processors}_proc/'
+data = parser.parse(base_path+'example_case.tgff',
                     total_processors, total_speeds)
 
 sim_data = 'task_data.json'
@@ -96,7 +96,7 @@ def run(beta, dls_algo=False, base_power_min=True, agent_system=True):
 beta_values = [1.0, (0.85, 1.0)]
 #beta_values = [1.0]
 
-writer = pd.ExcelWriter(base_path + 'EDLS_1.xlsx', engine='xlsxwriter')
+writer = pd.ExcelWriter(base_path + 'EDLS.xlsx', engine='xlsxwriter')
 for beta in beta_values:
     all_processors_speeds = list(product(*all_speeds))
     labels = ['Task Energy', 'Total Execution Time',

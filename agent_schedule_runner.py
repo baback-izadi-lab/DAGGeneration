@@ -135,7 +135,8 @@ class ScheduleRunner:
             parents = set(self.schedule[str(task_num)]['parents'])
             children = set()
             for child_num in self.schedule[str(task_num)]['children']:
-                children.add(self.all_tasks[child_num])
+                if child_num in self.all_tasks:
+                    children.add(self.all_tasks[child_num])
             task.set_graphs(parents, children, self.processor_times)
 
     def start(self):
@@ -196,3 +197,4 @@ if __name__ == "__main__":
     #import plot
 
     #plot.plot(runner.processor_times, runner.max_time)
+    # runner.update_max_time() += 5

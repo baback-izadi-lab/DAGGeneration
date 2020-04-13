@@ -3,6 +3,8 @@ import json
 from collections import defaultdict
 import statistics
 import networkx as nx
+import matplotlib.pyplot as plt
+from networkx.drawing.nx_agraph import graphviz_layout
 
 
 class TGFFParser:
@@ -169,7 +171,24 @@ class DAG:
 
 if __name__ == "__main__":
     parser = TGFFParser()
-    data = parser.parse('25_task_TEDLS.tgff', 3, [1, 2, 3])
-    parser.write_json('25_task.json')
-    #dag = DAG()
-    # print(dag.static_levels)
+    folder_names = ['DAG50', 'DAG100', 'DAG200', 'DAG400']
+    file_names = ['DAG_50', 'DAG_100', 'DAG_200', 'DAG_400']
+    for i, folder in enumerate(folder_names):
+        data = parser.parse(
+            f'./results/{folder}/{file_names[i]}_5.tgff', 5, [1, 2, 3, 3, 3])
+        parser.write_json(f'./results/{folder}/{file_names[i]}_5.json')
+
+    """
+    input_file = './results/TEDLS-NB/DAG-25/3_proc/task_data.json'
+    data = json.load(open(input_file))
+    arcs = data['arcs']
+    graph = nx.DiGraph()
+
+    for arc in arcs:
+        source, dest, comm_time = arcs[arc]
+        graph.add_edge(source, dest, weight=comm_time)
+
+    pos = graphviz_layout(graph, prog='dot')
+    nx.draw(graph, pos)
+    plt.show()
+    """

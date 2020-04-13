@@ -1,0 +1,44 @@
+tg_cnt 1
+task_cnt 100 1
+task_degree 2 2
+task_type_cnt 50
+trans_type_cnt 100
+period_laxity 1 
+period_mul 1,0.5,2 
+tg_write 
+eps_write 
+vcg_write
+table_label Proc0Exec
+table_cnt 1
+type_attrib  exec00 17.0 1.7 0.1
+pe_write
+
+table_label Proc0Power
+table_cnt 1
+type_attrib   power00 5.0 0.5 0.1
+pe_write
+
+table_label Proc1Exec
+table_cnt 1
+type_attrib  exec10 16.0 1.6 0.1, exec11 17.0 1.7 0.1
+pe_write
+
+table_label Proc1Power
+table_cnt 1
+type_attrib   power10 6.0 0.6 0.1, power11 5.0 0.5 0.1
+pe_write
+
+table_label Proc2Exec
+table_cnt 1
+type_attrib  exec20 15.0 1.5 0.1, exec21 16.0 1.6 0.1, exec22 17.0 1.7 0.1
+pe_write
+
+table_label Proc2Power
+table_cnt 1
+type_attrib   power20 7.0 0.7 0.1, power21 6.0 0.6 0.1, power22 5.0 0.5 0.1
+pe_write
+
+table_label arcs 
+table_cnt 1 
+type_attrib time 2.0 0.1
+trans_write
