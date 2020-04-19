@@ -24,7 +24,7 @@ class EDLS:
         self.tfs = [0 for i in range(self.dag.graph.number_of_nodes())]
         self.temp = [313.15 for i in speed_setting]
         self.potential_end_temp = []
-        self.max_temp = 358.15
+        self.max_temp = 371.15
         print("Printing initial_temp", self.initial_temp)
         step = 0
 
@@ -350,3 +350,12 @@ if __name__ == "__main__":
     #agent_schedule = edls.get_agent_schedule()
     print(schedule)
     # json.dump(agent_schedule, open('agent_schedule.json', 'w')) # for every iteration
+
+
+
+current_temp = [idle_temp, idle_temp, idle_temp]
+1 tierations
+current_temp = [idle_temp, task1temp, idle_temp]
+2 iteration
+current_temp = [idle_temp, task1temp, idle_temp]/max_temp
+normed_temp = []
