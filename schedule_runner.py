@@ -119,9 +119,9 @@ class ScheduleRunner:
 
 
 if __name__ == "__main__":
-    base_powers = [5, 5, 5]
+    base_powers = [14, 14, 14]
     runner = ScheduleRunner(schedule='agent_schedule.json',
-                            dag_data='25_task.json',
+                            dag_data='./results/DAG_10.json',
                             base_powers=base_powers)
 
     runner.start()

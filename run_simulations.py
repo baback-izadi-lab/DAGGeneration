@@ -1,4 +1,5 @@
 from data_representation import TGFFParser
+#from EDLS import EDLS
 from EDLS import EDLS
 import json
 #from schedule_runner import ScheduleRunner
@@ -13,33 +14,29 @@ import random
 parser = TGFFParser()
 # For small DAGS
 
-total_processors = 3
-total_tasks = 400
+total_processors = 5
+#total_tasks = 200
 
 if total_processors == 3:
     total_speeds = [1, 2, 3]
     all_base_powers = [[5], [5, 6], [5, 6, 7]]
 elif total_processors == 5:
     total_speeds = [1, 2, 3, 3, 3]
-    all_base_powers = [[5], [5, 6], [5, 6, 7], [7, 8, 9], [7, 8, 9]]
+    # all_base_powers = [[14], [14, 72], [
+    #    14, 72, 205], [14, 72, 205], [14, 72, 205]]
+    # all_base_powers = [[14], [72, 14], [
+    #    205, 72, 14], [205, 72, 25], [205, 72, 34]]
+    # all_base_powers = [[14], [14, 14], [
+    #    14, 14, 14], [25, 25, 25], [34, 34, 34]]
+    #all_base_powers = [[4], [8, 4], [12, 8, 4], [12, 8, 5], [12, 8, 6]]
+    #all_base_powers = [[8], [13, 8], [20, 13, 8], [20, 13, 10], [20, 13, 11]]
+    p = 1.0
+    all_base_powers = [[85*p], [130*p, 85*p], [205*p, 130*p, 85*p],
+                       [205*p, 130*p, 105*p], [205*p, 130*p, 115*p]]
 
 
-# TGFF Parser from data representation
-# Parses TGFF file and converts to json
-base_path = f'./results/TEDLS-NB/DAG-{total_tasks}/{total_processors}_proc/'
-data = parser.parse(base_path+'example_case.tgff',
-                    total_processors, total_speeds)
-
-sim_data = 'task_data.json'
-parser.write_json(base_path+sim_data)
-
-# Generates all possible speeds
-all_speeds = []
-for speeds in total_speeds:
-    all_speeds.append([i for i in range(speeds)] + [None])
-
-
-def run(beta, dls_algo=False, base_power_min=True, agent_system=True):
+def run(beta, all_speeds, base_path, sim_data, algorithm_name,
+        dls_algo=False, base_power_min=True, agent_system=True):
     """
     This functions runs the agent system based on certain parameters
 
@@ -68,10 +65,11 @@ def run(beta, dls_algo=False, base_power_min=True, agent_system=True):
         edls = EDLS(base_path+sim_data)
         schedule = edls.run(processor_speeds, dls_algo=dls_algo)
         agent_schedule = edls.get_agent_schedule()
-        json.dump(agent_schedule, open(base_path+'agent_schedule.json', 'w'))
+        json.dump(agent_schedule, open(
+            base_path+f'agent_schedule_{algorithm_name}.json', 'w'))
 
         # Agent system runs here
-        runner = ScheduleRunner(schedule=base_path+'agent_schedule.json',
+        runner = ScheduleRunner(schedule=base_path+f'agent_schedule_{algorithm_name}.json',
                                 speed_setting=processor_speeds,
                                 dag_data=base_path+sim_data,
                                 base_powers=base_powers, beta=beta,
@@ -91,54 +89,84 @@ def run(beta, dls_algo=False, base_power_min=True, agent_system=True):
     return table
 
 
-#
+def run_all(total_tasks, algorithm_name, dls=False):
+    # TGFF Parser from data representation
+    # Parses TGFF file and converts to json
+    base_path = f'./results/DAG{total_tasks}/'
+    sim_data = 'task_data.json'
 
-beta_values = [1.0, (0.85, 1.0)]
-#beta_values = [1.0]
+    data = parser.parse(base_path+f'DAG_{total_tasks}_5.tgff',
+                        total_processors, total_speeds)
 
-writer = pd.ExcelWriter(base_path + 'EDLS.xlsx', engine='xlsxwriter')
-for beta in beta_values:
-    all_processors_speeds = list(product(*all_speeds))
-    labels = ['Task Energy', 'Total Execution Time',
-              'Idle Energy', 'Total Energy']
-    total_table_data = defaultdict(list)
-    total_table_data['Processor Combination'] = [
-        comb for comb in all_processors_speeds]
+    # parser.write_json(base_path+sim_data)
 
-    for label in labels:
-        total_table_data[label] = [
-            0 for i in range(len(all_processors_speeds))]
+    # Generates all possible speeds
+    all_speeds = []
+    for speeds in total_speeds:
+        all_speeds.append([i for i in range(speeds)] + [None])
 
-    total_table = pd.DataFrame.from_dict(total_table_data)
-    beta_name = beta
+    beta_values = [(0.6, 1.0)]
+    #algorithm_name = 'TBH'
+    #dls = False
 
-    num_of_runs = 1
-    beta_list = []
-    for exp_run in range(num_of_runs):
-        if isinstance(beta, tuple):
-            beta = [random.uniform(beta[0], beta[1])
-                    for task_num in range(len(parser.tasks))]
-        beta_list.append(beta)
+    writer = pd.ExcelWriter(
+        base_path + f'{algorithm_name}_{total_tasks}.xlsx', engine='xlsxwriter')
+    for beta in beta_values:
+        all_processors_speeds = list(product(*all_speeds))
+        labels = ['Task Energy', 'Total Execution Time',
+                  'Idle Energy', 'Total Energy']
+        total_table_data = defaultdict(list)
+        total_table_data['Processor Combination'] = [
+            comb for comb in all_processors_speeds]
 
-    for beta in beta_list:
-        table = run(beta, dls_algo=False,
-                    base_power_min=True, agent_system=True)
         for label in labels:
-            total_table[label] += table[label]
+            total_table_data[label] = [
+                0 for i in range(len(all_processors_speeds))]
 
-    for label in labels:
-        total_table[label] /= num_of_runs
+        total_table = pd.DataFrame.from_dict(total_table_data)
+        beta_name = beta
 
-    total_table.to_excel(writer, sheet_name='beta {} agents'.format(beta_name))
+        num_of_runs = 10
+        beta_list = []
+        for exp_run in range(num_of_runs):
+            if isinstance(beta, tuple):
+                beta = [random.uniform(beta[0], beta[1])
+                        for task_num in range(len(parser.tasks))]
+            beta_list.append(beta)
 
-    total_table = pd.DataFrame.from_dict(total_table_data)
-    for beta in beta_list:
-        table = run(beta, dls_algo=False,
-                    base_power_min=False, agent_system=False)
+        for beta in beta_list:
+            table = run(beta, all_speeds, base_path, sim_data, algorithm_name,
+                        dls_algo=dls, base_power_min=True, agent_system=True)
+            for label in labels:
+                total_table[label] += table[label]
+
         for label in labels:
-            total_table[label] += table[label]
+            total_table[label] /= num_of_runs
 
-    for label in labels:
-        total_table[label] /= num_of_runs
-    table.to_excel(writer, sheet_name='beta {} wo agents'.format(beta_name))
-writer.save()
+        total_table.to_excel(
+            writer, sheet_name='beta {} agents'.format(beta_name))
+
+        total_table = pd.DataFrame.from_dict(total_table_data)
+        for beta in beta_list:
+            table = run(beta, all_speeds, base_path, sim_data, algorithm_name,
+                        dls_algo=dls, base_power_min=False, agent_system=False)
+            for label in labels:
+                total_table[label] += table[label]
+
+        for label in labels:
+            total_table[label] /= num_of_runs
+        table.to_excel(
+            writer, sheet_name='beta {} wo agents'.format(beta_name))
+    writer.save()
+
+
+if __name__ == '__main__':
+    total_tasks = [25, 50, 100, 200, 400]
+    #total_tasks = [25]
+    for tasks in total_tasks:
+        run_all(tasks, 'EDLS')
+        print(f'EDLS for DAG {tasks} complete')
+
+    # for tasks in total_tasks:
+    #    run_all(tasks, 'DLS', dls=True)
+    #    print(f'DLS for DAG {tasks} complete')

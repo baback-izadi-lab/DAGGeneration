@@ -10,6 +10,15 @@ class EDLS:
 
     def run(self, speed_setting, dls_algo=False):
         self.dag = DAG(self.dag_path, speed_setting=speed_setting)
+        #print("printing speed_setting")
+        # print(speed_setting)
+        active_proc = sum([1 for i in speed_setting if i != None])
+        """
+        x = 0
+        for i in speed_setting:
+            if i == None:
+                x += 1
+        """
         self.speed_setting = speed_setting
         self.schedule = [[] for i in range(len(self.speed_setting))]
         self.remaining_tasks = set(self.dag.graph.nodes())
@@ -20,10 +29,9 @@ class EDLS:
         self.assigned_node = None
         self.tfs = [0 for i in range(self.dag.graph.number_of_nodes())]
 
-        self.current_proc_temps = [self.current_temp(0.4*14),
-                                   self.current_temp(0.4*14),
-                                   self.current_temp(0.4*14)]
-        print(f'static levels : {self.dag.static_levels}')
+        self.current_proc_temps = [self.current_temp(
+            0.4*14) for i in range(len(speed_setting))]
+        #print(f'static levels : {self.dag.static_levels}')
         step = 0
 
         while len(self.remaining_tasks) > 0:
@@ -33,8 +41,8 @@ class EDLS:
                 dls = self.dl(node)
                 if not dls_algo:
                     edls = dls + dls * (1 - self.normed_temp(node))
-                    print(
-                        f'Task {node} : DLS= {dls}, (1 - normed_temp) = {dls * (1 - self.normed_temp(node))}')
+                    # print(
+                    #    f'Task {node} : DLS= {dls}, (1 - normed_temp) = {dls * (1 - self.normed_temp(node))}')
                     edls[np.isnan(edls)] = np.NINF
                     all_edls.append(edls)
                 else:
@@ -45,8 +53,8 @@ class EDLS:
                               index=self.ready_nodes,
                               columns=[i for i in range(len(self.speed_setting))])
             step += 1
-            print("Step {}".format(step))
-            print(df)
+            #print("Step {}".format(step))
+            # print(df)
 
             node_index, self.assigned_proc = np.unravel_index(
                 np.argmax(all_edls, axis=None), all_edls.shape)
@@ -58,20 +66,20 @@ class EDLS:
 
             assigned_expected_temp = self.expected_temp[self.assigned_proc]
 
-            if assigned_expected_temp == max(self.expected_temp):
-                print(f'Assigned processor {self.assigned_proc} is too hot!')
-                print(f'{all_edls[node_index]}')
+            if (assigned_expected_temp == max(self.expected_temp)) & (active_proc > 1):
+                #print(f'Assigned processor {self.assigned_proc} is too hot!')
+                # print(f'{all_edls[node_index]}')
                 # Next line gets the processor number of second highest TEDLS value
                 self.assigned_proc = all_edls[node_index].argsort(
                 )[-2:][::-1][-1]
 
-                print(
-                    f'Switching task {self.assigned_node} to processor {self.assigned_proc}')
+                # print(
+                #    f'Switching task {self.assigned_node} to processor {self.assigned_proc}')
 
             self.schedule[self.assigned_proc].append(self.assigned_node)
 
-            print("Task assigned: {}. To Processor: {}".format(
-                self.assigned_node, self.assigned_proc))
+            # print("Task assigned: {}. To Processor: {}".format(
+            #    self.assigned_node, self.assigned_proc))
             speed = self.speed_setting[self.assigned_proc]
             power = self.dag.data['proc_power'][str(
                 self.assigned_proc)][speed][self.assigned_node]
@@ -79,8 +87,8 @@ class EDLS:
             self.current_proc_temps[self.assigned_proc] = self.current_temp(
                 power)
 
-            print(f'Current temperatures: {self.current_proc_temps}')
-            print('-------------------------------------------')
+            #print(f'Current temperatures: {self.current_proc_temps}')
+            # print('-------------------------------------------')
             # exec_time = self.dag.data['proc_exec'][str(
             #    self.assigned_proc)][self.speed_setting[self.assigned_proc]][node]
 
@@ -118,18 +126,21 @@ class EDLS:
         # max_temps = [self.current_temp(14),
         #             self.current_temp(72),
         #             self.current_temp(205)]
-        max_temps = [self.current_temp(205),
-                     self.current_temp(205),
-                     self.current_temp(205)]
+        # correction
+        # max_temps = [self.current_temp(205)
+        #             for i in range(len(self.speed_setting))]
+        max_temps = max(self.expected_temp)
         for i, temp in enumerate(self.expected_temp):
             if temp > 0:
-                normed_temps.append(temp/max_temps[i])
+                # normed_temps.append(temp/max_temps[i])
+                normed_temps.append(temp/max_temps)
             elif temp == 0:
                 normed_temps.append(np.Inf)
         return np.array(normed_temps)
 
     def current_temp(self, power):
         return power*0.249 + 320.15
+        # return power * 0.249 + 47
 
     def alpha(self, node):
         alphas = []
@@ -228,12 +239,12 @@ class EDLS:
 
 
 if __name__ == "__main__":
-    edls = EDLS('./results/DAG_10.json')
-    processor_speeds = [0, 0, 0]
+    edls = EDLS('./results/DAG25/task_data.json')
+    processor_speeds = [0, 0, 0, None, None]
     # Note if you want to run DLS algorithm uncoment following command
     schedule = edls.run(processor_speeds, dls_algo=False)
-    print('Final Schedule:')
-    print(schedule)
-    # agent_schedule = edls.get_agent_schedule()
+    #print('Final Schedule:')
     # print(schedule)
-    # json.dump(agent_schedule, open('agent_schedule.json', 'w'))
+    agent_schedule = edls.get_agent_schedule()
+    # print(schedule)
+    json.dump(agent_schedule, open('./results/agent_schedule.json', 'w'))

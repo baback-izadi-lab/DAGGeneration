@@ -166,10 +166,10 @@ class EDLS:
 
 
 if __name__ == "__main__":
-    edls = EDLS('./results/EDLS/DAG-10/task_data.json')
-    processor_speeds = [None, None, 2]
+    edls = EDLS('./results/DAG25/task_data.json')
+    processor_speeds = [0, 0, 0, None, None]
     # Note if you want to run DLS algorithm uncoment following command
-    schedule = edls.run(processor_speeds, dls_algo=False)
+    schedule = edls.run(processor_speeds, dls_algo=True)
     agent_schedule = edls.get_agent_schedule()
     print(schedule)
-    json.dump(agent_schedule, open('agent_schedule.json', 'w'))
+    json.dump(agent_schedule, open('./results/agent_schedule.json', 'w'))

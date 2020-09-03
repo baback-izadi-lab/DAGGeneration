@@ -171,18 +171,52 @@ class ScheduleRunner:
     def idle_energy(self):
         idle_energy = 0
         for proc_num, time in enumerate(self.idle_times):
-            lowest_power = self.base_powers[proc_num] * 0.4
-            idle_energy += lowest_power * time
+            idle_power = self.base_powers[proc_num] * 0.1
+            idle_energy += idle_power * time
         return idle_energy
+
+    def current_temp(self, power):
+        # return power*0.249 + 320.15
+        return power*0.249 + 47
+
+    @property
+    def avg_temp(self):
+        temps = []
+        max_time = self.max_time
+        idle_times = self.idle_times
+        for proc, speed in enumerate(self.speed_setting):
+            if speed is not None:
+                running_time = max_time - idle_times[proc]
+                running_power = self.base_powers[proc]
+                running_temp = self.current_temp(running_power)
+                idle_temp = self.current_temp(running_power*0.1)
+                running_avg_temp = 0
+                idle_avg_temp = 0
+
+                running_avg_temp = running_temp*running_time
+                print(f'{running_avg_temp} = {running_temp} * {running_time}')
+
+                idle_avg_temp = idle_temp*idle_times[proc]
+                print(f'{idle_avg_temp} = {idle_temp} * {idle_times[proc]}')
+
+                avg_temp = (running_avg_temp + idle_avg_temp)/max_time
+                temps.append(avg_temp)
+            else:
+                temps.append(None)
+        return temps
 
 
 if __name__ == "__main__":
-    base_powers = [5, 15, 25]
-    runner = ScheduleRunner(schedule='./results/EDLS/DAG-10/agent_schedule.json',
-                            dag_data='./results/EDLS/DAG-10/task_data.json',
-                            speed_setting=[None, None, 2],
+    #base_powers = [4, 8, 12, 14, 14]
+    # base_power = [[85*p], [130*p, 85*p], [205*p, 130*p, 85*p],
+    #                   [205*p, 130*p, 105*p], [205*p, 130*p, 115*p]]
+    base_powers = [85, 130, 205, 205, 205]
+    runner = ScheduleRunner(schedule='./results/agent_schedule.json',
+                            dag_data='./results/DAG25/task_data.json',
+                            speed_setting=[0, 0, 0, None, None],
                             base_powers=base_powers,
-                            agent_system=True)
+                            beta=1.0,
+                            agent_system=False)
 
     runner.start()
     print(runner.processor_times)
@@ -194,6 +228,7 @@ if __name__ == "__main__":
     print(runner.idle_times)
     print(runner.idle_energy)
     print('Total Energy: {}'.format(runner.task_energy + runner.idle_energy))
+    print(runner.avg_temp)
     #import plot
 
     #plot.plot(runner.processor_times, runner.max_time)

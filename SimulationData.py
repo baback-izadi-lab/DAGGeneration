@@ -1,7 +1,9 @@
 import os
 
+
 class TaskGraphData:
     """This class stores all data related processor scheduling which is written to file using DatHandler class"""
+
     def __init__(self):
         self.average_exec = {}
         self.variation_exec = {}
@@ -115,6 +117,7 @@ class TaskGraphData:
     def get_arcs_variation(self):
         return self.arc_variation
 
+
 class DatHandler:
     """This class handles i.e. reads and writes into the dat file where info about the DAG is stored"""
 
@@ -133,22 +136,26 @@ class DatHandler:
         lines.append(line3)
         line4 = '\noutdegree = ' + str(data.get_outdegree())
         lines.append(line4)
-        line5 = '\narcs ' + str(data.get_arcs_average()) + ' ' + str(data.get_arcs_variation())
+        line5 = '\narcs ' + str(data.get_arcs_average()) + \
+            ' ' + str(data.get_arcs_variation())
         lines.append(line5)
         for proc in range(data.get_num_proc()):
-            lines.append('\nnum_of_speeds_for_proc ' + str(proc) + ' = ' + str(data.num_speeds[proc]))
+            lines.append('\nnum_of_speeds_for_proc ' +
+                         str(proc) + ' = ' + str(data.num_speeds[proc]))
         for proc in range(data.get_num_proc()):
             lines.append('\n')
             lines.append('\nDetails of Processor ' + str(proc))
             lines.append('\nExecution  Times - Average - Variation')
 
             for speed in range(data.get_num_speeds(proc)):
-                lines.append('\nexec ',proc,speed,'  ',data.get_average_exec(proc, speed),'  ',data.get_variation_exec(proc, speed))
+                lines.append('\nexec ', proc, speed, '  ', data.get_average_exec(
+                    proc, speed), '  ', data.get_variation_exec(proc, speed))
 
             lines.append('\nPower Consumption - Average - Variation')
 
             for speed in range(data.get_num_speeds(proc)):
-                lines.append('\npower ' + str(proc) + str(speed) + '  ' + str(data.get_average_power(proc, speed)) + '  ' + str(data.get_variation_power(proc, speed)))
+                lines.append('\npower ' + str(proc) + str(speed) + '  ' + str(data.get_average_power(
+                    proc, speed)) + '  ' + str(data.get_variation_power(proc, speed)))
 
         data_file.writelines(lines)
         data_file.close()
@@ -169,13 +176,18 @@ class DatHandler:
                 if (line.split()[0] == 'outdegree'):
                     self.data.set_outdegree(int(line.split()[2]))
                 if (line.split()[0] == 'arcs'):
-                    self.data.set_arcs(float(line.split()[1]), float(line.split()[2]))
+                    self.data.set_arcs(
+                        float(line.split()[1]), float(line.split()[2]))
                 if (line.split()[0] == 'exec'):
-                    self.data.average_exec[line.split()[1]] = float(line.split()[2])
-                    self.data.variation_exec[line.split()[1]] = float(line.split()[3])
+                    self.data.average_exec[line.split()[1]] = float(
+                        line.split()[2])
+                    self.data.variation_exec[line.split()[1]] = float(
+                        line.split()[3])
                 if (line.split()[0] == 'power'):
-                    self.data.average_power[line.split()[1]] = float(line.split()[2])
-                    self.data.variation_power[line.split()[1]] = float(line.split()[3])
+                    self.data.average_power[line.split()[1]] = float(
+                        line.split()[2])
+                    self.data.variation_power[line.split()[1]] = float(
+                        line.split()[3])
         speeds = []
         for line_num in range(len(lines)):
             if (lines[line_num].split()):
@@ -185,70 +197,83 @@ class DatHandler:
 
         return self.data
 
+
 class TGFFGenerator:
     """This class generates the TGFF file it needs path to TGFF in the config file"""
-    def __init__(self,data,tgff_filename):
+
+    def __init__(self, data, tgff_filename):
         """Pass TaskGraphData and filename ONLY of the tgff file"""
-        #print "I'm in TGFFGenerator __int__!"
+        # print "I'm in TGFFGenerator __int__!"
         self.data = data
-        self.tgff_path = "/home/rashad/Documents/tgff-3.6/"
-        self.tgff_path_example = self.tgff_path + 'examples/'
+        #self.tgff_path = "/home/rashad/Documents/tgff-3.6/"
+        #self.tgff_path_example = self.tgff_path + 'examples/'
+        self.tgff_path_example = './'
         self.tgff_filename = tgff_filename + '.tgffopt'
         self.write_file()
 
     def write_file(self):
         """Writes the tgffopt file to the examples directory of the tgff folder"""
-        self.tgff_file = open(self.tgff_path_example+self.tgff_filename,'w+')
+        self.tgff_file = open(self.tgff_path_example+self.tgff_filename, 'w+')
         lines = []
         lines.append('tg_cnt 1\n')
         lines.append('task_cnt ' + str(2*self.data.num_tasks) + ' 1\n')
-        lines.append('task_degree ' + str(self.data.indegree) + ' ' + str(self.data.outdegree) +'\n')
+        lines.append('task_degree ' + str(self.data.indegree) +
+                     ' ' + str(self.data.outdegree) + '\n')
         lines.append('task_type_cnt ' + str(self.data.num_tasks))
         lines.append('trans_type_cnt' + str(self.data.num_tasks*2))
-        lines.append("\nperiod_laxity 1 \nperiod_mul 1,0.5,2 \ntg_write \neps_write \nvcg_write")
-        #writing the details of processors into tgff file
+        lines.append(
+            "\nperiod_laxity 1 \nperiod_mul 1,0.5,2 \ntg_write \neps_write \nvcg_write")
+        # writing the details of processors into tgff file
         for proc in range(self.data.num_proc):
-            lines.append('\ntable_label Proc' + str(proc) + 'Exec' + '\ntable_cnt 1' + '\ntype_attrib')
+            lines.append('\ntable_label Proc' + str(proc) +
+                         'Exec' + '\ntable_cnt 1' + '\ntype_attrib')
             for speed in range(self.data.num_speeds[proc]):
-                if speed==0:
+                if speed == 0:
                     lines.append(' ')
                 else:
                     lines.append(',')
                 key = str(proc) + str(speed)
                 average_exec = str(self.data.average_exec[key])
-                variation_exec  = str(self.data.variation_exec[key])
-                lines.append(' exec' + key + ' ' + average_exec + ' ' + variation_exec + ' 0.1')
+                variation_exec = str(self.data.variation_exec[key])
+                lines.append(' exec' + key + ' ' + average_exec +
+                             ' ' + variation_exec + ' 0.1')
             lines.append('\npe_write\n')
             lines.append('\ntable_label Proc' + str(proc) + 'Power')
             lines.append('\ntable_cnt 1')
             lines.append('\ntype_attrib ')
             for speed in range(self.data.num_speeds[proc]):
-                if speed==0:
+                if speed == 0:
                     lines.append(' ')
                 else:
                     lines.append(',')
                 key = str(proc) + str(speed)
                 average_power = str(self.data.average_power[key])
-                variation_power  = str(self.data.variation_power[key])
-                lines.append(' power' + key + ' ' + average_power + ' ' + variation_power + ' 0.1')
+                variation_power = str(self.data.variation_power[key])
+                lines.append(' power' + key + ' ' + average_power +
+                             ' ' + variation_power + ' 0.1')
             lines.append('\npe_write\n')
-        lines.append('\ntable_label arcs \ntable_cnt 1 \ntype_attrib time ' + str(self.data.arc_average) + ' ' + str(self.data.arc_variation) + '\ntrans_write')
+        lines.append('\ntable_label arcs \ntable_cnt 1 \ntype_attrib time ' + str(
+            self.data.arc_average) + ' ' + str(self.data.arc_variation) + '\ntrans_write')
         self.tgff_file.writelines(lines)
         self.tgff_file.close()
 
+
 class TGFFcommand:
     """Runs the TGFF command"""
-    def __init__(self,tgff_filename):
+
+    def __init__(self, tgff_filename):
         self.tgff_filename = tgff_filename
         self.tgff_path = "/home/rashad/Documents/tgff-3.6/"
         self.tgff_path_example = self.tgff_path + 'examples/'
         self.tgff_filename = tgff_filename + '.tgffopt'
         #retcode = subprocess.call([self.tgff_path+'tgff',self.tgff_path_example+tgff_filename])
-        retcode = os.system(self.tgff_path+'tgff ' + self.tgff_path_example+tgff_filename)
-        #print retcode
+        retcode = os.system(self.tgff_path+'tgff ' +
+                            self.tgff_path_example+tgff_filename)
+        # print retcode
+
 
 if __name__ == "__main__":
-    print ("This is Start of main")
+    print("This is Start of main")
     data = TaskGraphData()
     """
     num_proc=input("Please input the number of processors: ")
@@ -279,12 +304,11 @@ if __name__ == "__main__":
     """
 
     dat = DatHandler()
-    dat.set_path('/home/rashad/PycharmProjects/DAGGeneration/example_case0.dat')
-    #dat.write_dat(data)
+    dat.set_path(
+        './example_case0 (2).dat')
+    # dat.write_dat(data)
     data = dat.read_dat()
     tg = TGFFGenerator(data, 'example_case0')
     tg.write_file()
-    tc =TGFFcommand('example_case0')
+    #tc =TGFFcommand('example_case0')
     print("This is End of main")
-
-

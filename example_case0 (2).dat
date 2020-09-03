@@ -1,0 +1,54 @@
+num_of_processors = 5
+num_of_tasks = 25
+indegree = 2
+outdegree = 2
+arcs .2 0.01
+num_of_speeds_for_proc 0 = 1
+num_of_speeds_for_proc 1 = 2
+num_of_speeds_for_proc 2 = 3
+num_of_speeds_for_proc 3 = 3
+num_of_speeds_for_proc 4 = 3
+
+Details of Processor 0
+Execution  Times - Average - Variation
+exec 00  12  1.2
+Power Consumption - Average - Variation
+power 00  85  8.5
+
+Details of Processor 1
+Execution  Times - Average - Variation
+exec 10  7  0.7
+exec 11  12  1.2
+Power Consumption - Average - Variation
+power 10  130  13.0
+power 11  85  8.5
+
+Details of Processor 2
+Execution  Times - Average - Variation
+exec 20  5  0.5
+exec 21  7  0.7
+exec 22  12  1.2
+Power Consumption - Average - Variation
+power 20  205  20.5
+power 21  130  13.0
+power 22  85  8.5
+
+Details of Processor 3
+Execution  Times - Average - Variation
+exec 30  5  0.5
+exec 31  7  0.7
+exec 32  10  1.0
+Power Consumption - Average - Variation
+power 30  205  20.5
+power 31  130  13.0
+power 32  105  10.5
+
+Details of Processor 4
+Execution  Times - Average - Variation
+exec 40  5  0.5
+exec 41  7  0.7
+exec 42  9  0.9
+Power Consumption - Average - Variation
+power 40  205  20.5
+power 41  130  13.0
+power 42  115  11.5
