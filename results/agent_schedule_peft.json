@@ -1,0 +1,114 @@
+{
+    "0": {
+        "children": [
+            1,
+            2,
+            3,
+            4,
+            5
+        ],
+        "parents": [],
+        "processor": 1,
+        "speed": 0
+    },
+    "1": {
+        "children": [
+            8,
+            7
+        ],
+        "parents": [
+            0
+        ],
+        "processor": 1,
+        "speed": 0
+    },
+    "2": {
+        "children": [
+            6
+        ],
+        "parents": [
+            0,
+            3
+        ],
+        "processor": 0,
+        "speed": 0
+    },
+    "3": {
+        "children": [
+            8,
+            7,
+            2
+        ],
+        "parents": [
+            0
+        ],
+        "processor": 0,
+        "speed": 0
+    },
+    "4": {
+        "children": [
+            8
+        ],
+        "parents": [
+            0,
+            5
+        ],
+        "processor": 2,
+        "speed": 0
+    },
+    "5": {
+        "children": [
+            4,
+            7
+        ],
+        "parents": [
+            0
+        ],
+        "processor": 2,
+        "speed": 0
+    },
+    "7": {
+        "children": [
+            9
+        ],
+        "parents": [
+            1,
+            3,
+            5
+        ],
+        "processor": 1,
+        "speed": 0
+    },
+    "8": {
+        "children": [
+            9
+        ],
+        "parents": [
+            1,
+            3,
+            4
+        ],
+        "processor": 2,
+        "speed": 0
+    },
+    "6": {
+        "children": [
+            9
+        ],
+        "parents": [
+            2
+        ],
+        "processor": 0,
+        "speed": 0
+    },
+    "9": {
+        "children": [],
+        "parents": [
+            8,
+            6,
+            7
+        ],
+        "processor": 0,
+        "speed": 0
+    }
+}
