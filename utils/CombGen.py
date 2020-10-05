@@ -1,5 +1,5 @@
 import copy
-from SimulationData import *
+from .SimulationData import *
 
 class TGFFParser:
     """This class is the final step in creation of the digraph

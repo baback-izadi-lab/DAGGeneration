@@ -1,6 +1,6 @@
-from SimulationData import *
-from CombGen import *
-from EDLS import *
+from .SimulationData import *
+from .CombGen import *
+from ..algorithms.EDLS import *
 import copy
 import math
 import os

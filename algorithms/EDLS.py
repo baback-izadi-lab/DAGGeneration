@@ -1,9 +1,9 @@
-from data_representation import DAG
+from ..utils.data_representation import DAG
 import numpy as np
 import json
 import pandas as pd
-from agent_schedule_runner import *
-from plot import plot
+from ..utils.agent_schedule_runner import *
+from ..utils.plot import plot
 
 
 class EDLS:

@@ -1,5 +1,5 @@
-from SimulationData import *
-from CombGen import *
+from ..utils.SimulationData import *
+from ..utils.CombGen import *
 from copy import deepcopy
 import math
 import os

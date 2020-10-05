@@ -1,9 +1,9 @@
-from data_representation import TGFFParser
+from .data_representation import TGFFParser
 #from EDLS import EDLS
-from TEDLS_Shekar import EDLS
+from ..algorithms.TEDLS_Shekar import EDLS
 import json
 #from schedule_runner import ScheduleRunner
-from agent_schedule_runner import ScheduleRunner
+from .agent_schedule_runner import ScheduleRunner
 from itertools import product
 import pandas as pd
 from collections import defaultdict

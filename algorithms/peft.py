@@ -2,7 +2,7 @@
 
 from collections import deque, namedtuple
 from math import inf
-from peft.gantt import showGanttChart
+from ..utils.gantt import showGanttChart
 from types import SimpleNamespace
 
 import argparse
