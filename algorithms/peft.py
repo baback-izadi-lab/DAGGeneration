@@ -158,20 +158,20 @@ def _compute_optimistic_cost_table(_self, dag):
     
     node_can_be_processed = lambda node: all(successor in optimistic_cost_table for successor in dag.successors(node))
     while visit_queue:
-        print(visit_queue)
+        
         node = visit_queue.pop()
-        print(node)
-        optimistic_cost_table[node] = _self.computation_matrix.shape[1] * [0]
-
+        
+        
         while node_can_be_processed(node) is not True:
             try:
                 node2 = visit_queue.pop()
             except IndexError:
                 raise RuntimeError(f"Node {node} cannot be processed, and there are no other nodes in the queue to process instead!")
             visit_queue.appendleft(node)
-            print(f'Node 2: {node2}')
+            
             node = node2
-        
+        optimistic_cost_table[node] = _self.computation_matrix.shape[1] * [0]
+
         logger.debug(f"Computing optimistic cost table entries for node: {node}")
 
         # Perform OCT kernel
@@ -194,7 +194,7 @@ def _compute_optimistic_cost_table(_self, dag):
                 if min_proc_oct > max_successor_oct:
                     max_successor_oct = min_proc_oct
             assert max_successor_oct != -inf, f"No node should have a maximum successor OCT of {-inf} but {node} does when looking at processor {curr_proc}"
-            print(f'{optimistic_cost_table.keys()} {node}')
+            
             optimistic_cost_table[node][curr_proc] = max_successor_oct
         # End OCT kernel
         dag.nodes[node]['rank'] = np.mean(optimistic_cost_table[node])
