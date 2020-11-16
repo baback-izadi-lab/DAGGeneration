@@ -38,7 +38,7 @@ HF = 0.5
 edge_weight_range = [1,100]
 bw_range = [10,100]
 
-with open("graph.config","r") as f:
+with open("./DAGGeneration/graph_gen/graph.config","r") as f:
 	config = f.readlines()
 config = [(x.strip()).split() for x in config]
 #print(config)
