@@ -2,7 +2,7 @@
 
 from collections import deque, namedtuple
 from math import inf
-from ..utils.gantt import showGanttChart
+from utils.gantt import showGanttChart
 from types import SimpleNamespace
 
 import argparse
@@ -139,7 +139,6 @@ def _compute_optimistic_cost_table(_self, dag):
     """
     Uses a basic BFS approach to traverse upwards through the graph building the optimistic cost table along the way
     """
-
     optimistic_cost_table = {}
 
     terminal_node = [node for node in dag.nodes() if not any(True for _ in dag.successors(node))]
@@ -154,12 +153,14 @@ def _compute_optimistic_cost_table(_self, dag):
         nx.set_edge_attributes(dag, { edge: float(dag.get_edge_data(*edge)['weight']) / avgCommunicationCost }, 'avgweight')
 
     optimistic_cost_table[terminal_node] = _self.computation_matrix.shape[1] * [0]
-    dag.node[terminal_node]['rank'] = 0
+    dag.nodes[terminal_node]['rank'] = 0
     visit_queue = deque(dag.predecessors(terminal_node))
     
     node_can_be_processed = lambda node: all(successor in optimistic_cost_table for successor in dag.successors(node))
     while visit_queue:
+        print(visit_queue)
         node = visit_queue.pop()
+        print(node)
         optimistic_cost_table[node] = _self.computation_matrix.shape[1] * [0]
 
         while node_can_be_processed(node) is not True:
@@ -168,6 +169,7 @@ def _compute_optimistic_cost_table(_self, dag):
             except IndexError:
                 raise RuntimeError(f"Node {node} cannot be processed, and there are no other nodes in the queue to process instead!")
             visit_queue.appendleft(node)
+            print(f'Node 2: {node2}')
             node = node2
         
         logger.debug(f"Computing optimistic cost table entries for node: {node}")
@@ -192,9 +194,10 @@ def _compute_optimistic_cost_table(_self, dag):
                 if min_proc_oct > max_successor_oct:
                     max_successor_oct = min_proc_oct
             assert max_successor_oct != -inf, f"No node should have a maximum successor OCT of {-inf} but {node} does when looking at processor {curr_proc}"
+            print(f'{optimistic_cost_table.keys()} {node}')
             optimistic_cost_table[node][curr_proc] = max_successor_oct
         # End OCT kernel
-        dag.node[node]['rank'] = np.mean(optimistic_cost_table[node])
+        dag.nodes[node]['rank'] = np.mean(optimistic_cost_table[node])
         visit_queue.extendleft([prednode for prednode in dag.predecessors(node) if prednode not in visit_queue])
 
     return optimistic_cost_table

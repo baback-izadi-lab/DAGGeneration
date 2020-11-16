@@ -252,7 +252,7 @@ class EDLS:
 if __name__ == "__main__":
     p = 0.4
     base_powers = [85*p, 130*p, 205*p]
-    edls = EDLS('./results/PEFT+EDLSmod DAGs/DAG25/25_task_DAG.json', base_powers=base_powers)
+    edls = EDLS('./results/PEFT+EDLSmodDAGs/DAG25/25_task_DAG.json', base_powers=base_powers)
     processor_speeds = [0, 0, 0]
     # Note if you want to run DLS algorithm uncoment following command
     schedule = edls.run(processor_speeds, dls_algo=False)
